@@ -1,0 +1,43 @@
+\begin{tikzpicture}
+	% Paths, nodes and wires:
+	\draw (0.683, 2.803) to[sinusoidal current source] (2.433, 2.803);
+	\draw (0.433, 3.303) to[empty diode, /tikz/circuitikz/bipoles/length=0.840cm] (0.433, 5.053);
+	\draw (2.683, 3.303) to[empty diode, /tikz/circuitikz/bipoles/length=0.840cm] (2.683, 5.053);
+	\draw (0.433, 0.303) to[empty diode, /tikz/circuitikz/bipoles/length=0.840cm] (0.433, 2.053);
+	\draw (2.683, 0.303) to[empty diode, /tikz/circuitikz/bipoles/length=0.840cm] (2.683, 2.053);
+	\draw (0.433, 3.803) -- (0.433, 2.803);
+	\draw (0.683, 2.803) -- (0.433, 2.803) -| (0.433, 2.053);
+	\draw (2.433, 2.803) -- (2.683, 2.803) -| (2.683, 3.803);
+	\draw (2.683, 2.053) -| (2.683, 2.803);
+	\draw (0.433, 0.303) -- (2.683, 0.303);
+	\draw (0.433, 5.053) -- (2.683, 5.053);
+	\node[nfetd] at (5.433, 2.783){};
+	\draw (5.683, 5.053) to[empty diode, /tikz/circuitikz/bipoles/length=0.840cm] (7.433, 5.053);
+	\draw (7.433, 3.303) to[capacitor] (7.433, 2.303);
+	\draw (5.433, 5.053) -| (5.433, 3.553);
+	\draw (5.683, 5.053) -- (5.433, 5.053);
+	\draw (7.433, 5.053) -- (7.433, 3.303);
+	\draw (7.433, 2.303) -| (7.433, 0.303) -- (5.433, 0.303);
+	\draw (9.433, 4.553) to[american resistor] (9.433, 2.803);
+	\draw (9.433, 1.803) to[capacitor] (9.433, 0.803);
+	\draw (9.433, 2.803) -| (9.433, 1.803);
+	\draw (9.433, 0.803) -| (9.433, 0.303) -- (7.433, 0.303);
+	\node[shape=rectangle, minimum width=0.715cm, minimum height=0.715cm] at (4.058, 5.428){} node[anchor=north west, align=left, text width=0.327cm, inner sep=6pt] at (3.683, 5.803){$i_L$};
+	\draw (8.433, 5.053) -- (9.433, 5.053) -| (9.433, 4.553);
+	\node[shape=rectangle, minimum width=0.715cm, minimum height=0.715cm] at (8.308, 5.303){} node[anchor=north west, align=left, text width=0.327cm, inner sep=6pt] at (7.933, 5.678){$i_{batt}$};
+	\node[shape=rectangle, minimum width=0.715cm, minimum height=0.59cm] at (3.433, 4.366){} node[anchor=north west, align=left, text width=0.327cm, inner sep=6pt] at (3.058, 4.678){$+$ };
+	\node[shape=rectangle, minimum width=0.715cm, minimum height=0.59cm] at (3.433, 0.803){} node[anchor=north west, align=left, text width=0.327cm, inner sep=6pt] at (3.058, 1.116){$-$ };
+	\node[shape=rectangle, minimum width=0.715cm, minimum height=0.59cm] at (3.433, 2.741){} node[anchor=north west, align=left, text width=0.327cm, inner sep=6pt] at (3.058, 3.053){$v_1$ };
+	\node[shape=rectangle, minimum width=0.715cm, minimum height=0.59cm] at (10.308, 4.428){} node[anchor=north west, align=left, text width=0.327cm, inner sep=6pt] at (9.933, 4.741){$+$ };
+	\node[shape=rectangle, minimum width=0.715cm, minimum height=0.59cm] at (10.308, 0.866){} node[anchor=north west, align=left, text width=0.327cm, inner sep=6pt] at (9.933, 1.178){$-$ };
+	\node[shape=rectangle, minimum width=0.715cm, minimum height=0.59cm] at (10.308, 2.803){} node[anchor=north west, align=left, text width=0.327cm, inner sep=6pt] at (9.933, 3.116){$v_{batt}$ };
+	\node[circ] at (3.433, 5.053){};
+	\node[circ] at (3.433, 0.303){};
+	\draw (2.683, 0.303) -- (3.433, 0.303) -- (5.433, 0.303) |- (5.433, 2.013);
+	\draw (5.433, 2.803) |- (5.433, 2.013);
+	\draw[-stealth] (7.433, 5.053) -- (8.433, 5.053);
+	\draw (2.683, 5.053) -- (3.433, 5.053);
+	\draw (4.183, 5.053) to[cute inductor] (5.183, 5.053);
+	\draw[-stealth] (3.433, 5.053) -- (4.183, 5.053);
+	\draw (5.183, 5.053) -- (5.433, 5.053);
+\end{tikzpicture}
