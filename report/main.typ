@@ -122,7 +122,91 @@ $
   f_(s w) (t) = frac(hat(V_i)|cos(omega t)|, 2 L Delta i_L ) ( 1 - frac(hat(V_i)|cos(omega t), V_o)) 
 $
 
-Usually, in commercial design, a ballpark frequency is chosen based on the technology, (SiC, GaN, etc.) and then an inductor is chosen. Thus, we will choose a ballpark frequency of 100 KHz, which is approximately the values chosen in switching speeds concerning GaN technology@gan_ev_review_2025.
+Usually, in commercial design, a ballpark frequency is chosen based on the technology, (SiC, GaN, etc.) and then an inductor is chosen. Thus, we will choose a ballpark frequency of 100 KHz, which is approximately the values chosen in switching speeds concerning GaN technology. @gan_ev_review_2025
+
+plugging in values to determine $L$ we set $cos(omega t) = 1$ and solve: 
+
+$ 
+  L  = frac(hat(V_i), 2 f_(s w) Delta i_L ) ( 1 - frac(hat(V_i), V_o)) \
+  L = frac(240 sqrt(2), 2(100 "kHz")(3 "A")) (1 - frac(240 sqrt(2), 400)) \
+
+  L = 85.686 mu"H"
+$ 
+
+we choose an inductor with a value $L = 85 - 90 mu"H"$ with a rating of $64-90 "A"$ then adjust $f_(s w)$ accordingly.
+
+There is a problem. there is no 90 A inductor, the closest inductor we could find are 100A inductors on digikey. Such as @digikeyL
+
+#figure( 
+  image("./figures/inductor_digikey.png"),
+  caption: [500mH 100A rated inductor found on digikey, which at the time of writing, is found to be \$363.44 USD]
+) <digikeyL>
+
+A 100 A rated $500 mu"H"$ inductor was found, which requires us to recalculate the switching frequency: 
+
+$
+  f_(s w)  = frac(hat(V_i), 2 L Delta i_L ) ( 1 - frac(hat(V_i), V_o)) \
+  f_(s w) = frac(240 sqrt(2), 2 (500 mu"H")(3A))(1 - frac(240 sqrt(2), 400)) \
+  // what 
+  f_(s w) = 17 "kHz"
+$
+
+this switching frequency is unreasonable, it will cause audible noise (human hearing is approximately 4 - 20 kHz), thus we choose 50 kHz, and that will minimize the current ripple $Delta i_L$ to $ approx 1.03 "A"$. 
+
+== Determining The capacitor size. 
+
+We are aiming to get a Power Factor of approximately 1, which then we can assume in our calculations. A $P F = 1$ allows us to model the power input $P_"in"$ and power output $P_"out"$ without considering the reactive power in out equations. Recall that $P = sqrt(S^2 + Q^2) => P = V I cos(phi.alt) + V I sin(phi.alt)$, if $P F approx 1$, then the phase between the voltage and current is effectively $0 degree$. Thus, 
+
+$ P_("out") = V_"RMS" I_"RMS" cos(0) + cancel(V_"RMS" I_"RMS" sin(0))^0==> V_"RMS" dot I_"RMS" $
+
+We will also assume an ideal conversion ratio $P_"in" = P_"out"$ as that inherently gives us a degree of safety when choosing a capacitor. 
+
+$
+  P_"in" = P_"out" = (240 "V")(60 "A") = 14400 "W" \
+  I_"batt" = P_"out" / V_o = frac(14400 "W" , 400 "V") = 36 "A"
+$ <cap>
+
+In a single-phase system, the instantaneous power $p_c (t)$ fluctuates at twice the line frequency ($2 omega$). We model the capacitor power as:
+
+$ p_c (t) = P_o cos(2 omega t) $
+
+For a small ripple approximation, the power in the capacitor is also related to the voltage derivative:
+
+$ p_c (t) = C V_o (d v_o) / (d t) $
+
+By integrating the power fluctuation, we find the time-varying ripple voltage $v_o (t)$:
+
+$ v_o (t) = P_o / (2 omega C V_o) sin(2 omega t) $
+
+The peak ripple amplitude $V_"ripple"$ is the coefficient of the sine term:
+
+$ V_("ripple") = P_o / (2 omega C V_o) $
+
+The peak-to-peak voltage ripple ($Delta V_(p p)$) is twice the peak amplitude. We require this ripple to be less than $4 "V"$:
+
+$ Delta V_(p p) = 2 V_("ripple") = P_o / (omega C V_o) < 4 "V" $
+
+Rearranging to solve for the minimum capacitance ($C$):
+
+$ 
+  C > P_o / (4 omega V_o) ==> C > frac(14400 "W", 8 pi 60 (400 "V")) \
+  ==> C > 24 "mF" 
+$ <cmin>
+
+using the parameters calculated in @cap and a capacitor that satsifies @cmin, we find a part on digikey: 
+
+#figure(
+  image("./figures/capacitor_digikey.png"),
+  caption: [2 of these 15 mF Aluminum Electrolytic Capacitors in parallel would create the correct capacitance with a margin of safety for the PFC rectifier.]
+) <cap_digikey>
+
+Calculating the voltage ripple using the capacitor found: 
+
+$
+  Delta V_(p p) = P_o / (omega C V_o) = frac( 14400 "W", (2 pi 60 "Hz") ( 30 "mF") (400 "V")) \
+  Delta V_(p p) approx 3.18 "V"
+$ 
+
 
 #pagebreak()
 
