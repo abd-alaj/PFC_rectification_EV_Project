@@ -30,7 +30,7 @@
   authors: document-authors,
   date: auto,
   abstract:[
-    I shidded my pant
+
   ],
 )
 
@@ -129,7 +129,6 @@ plugging in values to determine $L$ we set $cos(omega t) = 1$ and solve:
 $ 
   L  = frac(hat(V_i), 2 f_(s w) Delta i_L ) ( 1 - frac(hat(V_i), V_o)) \
   L = frac(240 sqrt(2), 2(100 "kHz")(3 "A")) (1 - frac(240 sqrt(2), 400)) \
-
   L = 85.686 mu"H"
 $ 
 
@@ -206,6 +205,103 @@ $
   Delta V_(p p) = P_o / (omega C V_o) = frac( 14400 "W", (2 pi 60 "Hz") ( 30 "mF") (400 "V")) \
   Delta V_(p p) approx 3.18 "V"
 $ 
+
+= Modelling 
+
+To model the PFC rectifier stage accurately, it is important to derive the average model first. We use the classical boost converter topology and extract the state variables as a function of the average inductor current $chevron.l i_L chevron.r$, battery $chevron.l v_"batt" chevron.r$ and input voltage $chevron.l v_1 chevron.r$. We use CCB and VSB laws and get the following: 
+
+//it may be a good idea to type up the derviation of the boost converter 0 to T_sw
+
+$
+  C frac(d, d t) chevron.l V_"batt" chevron.r = (1 - d) chevron.l i_L chevron.r - 1 / R chevron.l V_"batt" chevron.r \
+
+  L frac(d, d t) chevron i_L chevron.r = chevron v_1 chevron.r - (1 - d)chevron V_"batt" chevron.r
+$
+
+== Determining the Quiescent Point 
+
+At the peak of the AC cycle ($V_1 = 340 "V"$, $V_(b a t t) = 400 "V"$, $I_L = 60 sqrt(2) "A"$):
+$ chevron.l V_L chevron.r = D(V_1) + (1-D)(V_1 - V_(b a t t)) = 0\
+V_(b a t t) / V_1 = 1 / (1-D) ==>  400 / 340 = 1 / (1-D)\ 1 - D = 0.85 ==> D = 0.15 "(15% duty cycle)" $
+
+== Linearizing the Model
+
+To analyze the system's dynamic response, we perturb the variables around the quiescent operating point:
+$ 
+  v_"batt"(t) = V_"batt" + tilde(v)_"batt" (t) \
+  i_L(t) = I_L + tilde(i)_L (t) \
+  d(t) = D + tilde(d)(t) 
+$
+
+Substituting these into the average capacitor equation:
+$
+  C d/(d t) (V_"batt" + tilde(v)_"batt" (t)) = (1 - [D + tilde(d)(t)])(I_L + tilde(i)_L (t)) - (V_"batt" + tilde(v)_"batt" (t)) / R \
+  C d/(d t) tilde(v)_"batt" (t) = underbrace(cancel((1-D)I_L - V_"batt"/R)^0, "DC Term") + (1-D)tilde(i)_L (t) - I_L tilde(d)(t) - frac(tilde(v)_"batt" (t),R )- underbrace(cancel(tilde(d)(t)tilde(i)_L (t))^(approx 0), "2nd Order Term")
+$
+
+At steady state, $(1-D)I_L - V_"batt"/R = 0$. Note that 2nd order terms, (pertubations multiplied by pertubations) are very small: $tilde(d)tilde(i)_L approx 0$. Thus, we neglect them and isolate the linearized time-domain equation:
+
+$ C d/(d t) tilde(v)_"batt" (t) approx (1-D)tilde(i)_L(t) - I_L tilde(d)(t) - frac(tilde(v)_"batt" (t), R) $
+
+We now apply the Laplace transform. Note that the derivative $d/(d t)$ becomes $s$ in the $s$-domain #footnote[Tehcnically, $frac(d, d t) f(t) = s F(s) + f(0)$, however we assume all initial values are 0, simplifying the calculations.], and the time-varying functions $f(t)$ become $F(s)$:
+
+$ 
+  C s tilde(V)_"batt" (s) = (1-D)tilde(I)_L (s) - I_L tilde(D)(s) - frac(tilde(V)_"batt" (s), R) \
+  tilde(V)_"batt" (s) (C s + 1/R) = (1-D)tilde(I)_L (s) - I_L tilde(D)(s) \
+  tilde(V)_"batt" (s) = ((1-D)tilde(I)_L (s) - I_L tilde(D)(s)) / (C s + 1/R) 
+$
+
+To find the transfer function for the inductor current, we apply perturbations to the average inductor equation:
+$ L d/(d t) chevron.l i_L(t) chevron.r = chevron.l v_1(t) chevron.r - (1 - d(t)) chevron.l v_"batt"(t) chevron.r $
+
+Substituting $i_L(t) = I_L + tilde(i)_L(t)$, $v_"batt" (t) = V_"batt" + tilde(v)_"batt" (t)$, and $d(t) = D + tilde(d)(t)$:
+
+$
+ L d/(d t) (I_L + tilde(i)_L (t)) = (V_1) - (1 - [D + tilde(d)(t)])(V_"batt" + tilde(v)_"batt" (t)) \
+ L d/(d t) tilde(i)_L (t) = underbrace(cancel(V_1 - (1 - D) V_"batt")^0, "steady state cond.") - (1 - D) tilde(v)_"batt" (t) + V_"batt" tilde(d)(t) + underbrace(cancel(tilde(d)(t) tilde(v)_"batt" (t))^(approx 0), "second order product")\
+  L d/(d t) tilde(i)_L (t) approx V_"batt" tilde(d)(t) - (1 - D) tilde(v)_"batt" (t) \
+  s L tilde(I)_L (s) = V_"batt" tilde(D)(s) - (1 - D) tilde(V)_"batt" (s) 
+$
+
+Thus, the resulting small-signal equation for the inductor current is:
+$ tilde(I)_L (s) = (V_"batt" tilde(D)(s) - (1 - D) tilde(V)_"batt"(s)) / (s L) $
+
+== Transfer Function in relation to pertubations in the Duty cycle, $tilde(d)(s)$
+
+Now, we must determine the transfer function of the duty cycle in relation to duty cycle input pertubation: 
+
+$ 
+  tilde(v)_"batt"(s) = frac((1-D) tilde(i)_L (s) - I_L tilde(d)(s), s C + frac(1, R)) \
+  tilde(i)_L (s) = frac(V_"batt" tilde(d)(s) - (1-D) tilde(v)_"batt"(s), s L)
+$ <linearized_model>
+
+combine both lines in @linearized_model by subbing in $v_("batt") (s)$ and isolate input pertubation $tilde(d)(s)$:
+
+$ 
+  tilde(i)_L (s) = frac(V_"batt" tilde(d)(s) (s C + frac(1, R)) - (1-D)^2 tilde(i)_L (s) + (1-D) I_L tilde(d)(s), s L (s C + frac(1, R))) \ 
+  tilde(i)_L (s) [1 + frac((1-D)^2, s L (s C + frac(1, R)))] = frac((V_"batt" (s C + frac(1, R)) + (1-D) I_L) tilde(d)(s), s L (s C + frac(1, R))) \
+$
+
+which results in the following transfer function: 
+
+$
+  frac(tilde(i)_L (s), tilde(d)(s)) = frac(V_"batt" (s C + frac(1, R)) + (1-D) I_L, s L (s C + frac(1, R)) + (1-D)^2)
+$
+
+For the battery voltage transfer function, we substitute $tilde(i)_L (s)$ back into the original expression:
+
+$ 
+  tilde(v)_"batt"(s) = frac((1-D) V_"batt" tilde(d)(s) - (1-D)^2 tilde(v)_"batt"(s) - I_L tilde(d)(s) s L, s L (s C + frac(1, R))) \
+  tilde(v)_"batt"(s) [1 + frac((1-D)^2, s L (s C + frac(1, R)))] = frac(((1-D) V_"batt" - I_L s L) tilde(d)(s), cancel(s L (s C + frac(1, R)))) 
+$
+
+The resulting control-to-output voltage transfer function is:
+
+$ 
+  frac(tilde(v)_"batt"(s), tilde(d)(s)) = frac((1-D) V_"batt" - s L I_L, s L (s C + frac(1, R)) + (1-D)^2)
+$
+
+// TODO write simulations for when these transfer functions would and would not work.
 
 
 #pagebreak()
