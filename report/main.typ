@@ -332,9 +332,71 @@ plugging in parameters and extracting the margins on the bode plot, we can deter
   caption: [Plant Gain and phase margins with a modelled $R_"load"$ resistor of 11.1 $Omega$]
 )
 
-we then calculate the phase margin needed to determine compensate for the 
+The current loop PI controller $C_i (s)$ is designed by selecting a crossover frequency $f_(c,i)$ at $1/20$ of the switching frequency $f_s$. The controller takes the form:
+
+$ C_i (s) = K_(p,i) + frac(K_(i,i), s) $
+
+To achieve the target phase margin $phi.alt_m$, the required phase contribution from the zero, $phi_z$, is calculated by accounting for the plant's phase at the crossover frequency:
+
+$ phi.alt_z = -90^degree + phi.alt_m - angle G_i (j omega_(c,i)) $
+
+The zero frequency $omega_z$ and gains are then derived:
+
+$ omega_z = frac(omega_(c,i), tan(phi.alt_z)) quad K_(p,i) = frac(omega_(c,i), |G_i (j omega_(c,i))| sqrt(omega_(c,i)^2 + omega_z^2)) quad K_(i,i) = K_(p,i) omega_z $
+
+For the outer voltage loop, the plant is simplified to a first-order approximation based on the average capacitor current:
+
+$ G_(v,"avg") (s) = frac(V_("pk"), 2 V_("batt") C) dot frac(1, s + frac(2, R C)) $
+
+The nested loop stability is verified by combining the voltage controller, the average voltage plant, and the closed-loop current response $T_(i,c l)(s)$:
+
+$ L_(v,"nested") (s) = C_v (s) dot G_(v,"avg") (s) dot T_(i,c l) (s) $
+
+#figure(
+  image("./figures/R_load/Step_resp.png", width: 80%),
+  caption: [Step response of the combined nested control loops over a 0.5s interval.]
+)
+
+The resulting controller gains and system performance metrics are summarized below:
+
+#figure(
+  apa_table(
+    columns: (1fr, 1fr),
+    inset: 10pt,
+    align: horizon,
+    [*Parameter*], [*Value*],
+    [$K_(p,i)$ of PI controller $C_v (s)$], [0.03401083],
+    [$K_(i,i)$ of PI controller $C_v (s)$], [616.61620379],
+    [$K_(p,v)$ of PI controller $C_i (s)$], [1.71169271],
+    [$K_(i,v)$ of PI controller $C_i (s)$], [46.43726947]
+  ),
+  caption: [gain values for both PID controllers for a static load $R = 11.1 Omega$]
+)
+
+=== Implementation in simulink
+// add topology screenshot of the controller here. 
 
 
+== Controller Design for an Equivalent RC load
+
+A very similar design process was used to determine gain values for the PI controllers for the circuit with the RC load, which gave better results than the one for the static load. the Parameters found in this case where
+
+//these are not correct, change them
+#figure(
+  apa_table(
+    columns: (1fr, 1fr),
+    inset: 10pt,
+    align: horizon,
+    [*Parameter*], [*Value*],
+    [$K_(p,i)$ of PI controller $C_v (s)$], [0.03401083],
+    [$K_(i,i)$ of PI controller $C_v (s)$], [616.61620379],
+    [$K_(p,v)$ of PI controller $C_i (s)$], [1.71169271],
+    [$K_(i,v)$ of PI controller $C_i (s)$], [46.43726947]
+  ),
+  caption: [gain values for both PI controllers for a static load $R = 200  "m"Omega$ and $C = 40F$]
+)
+
+The constant values in this case have barely changed, but the signal tracking is much better compared to the first one. The signal tracks at 400V and doesn't drop to sub 250V like the previous simulation has done. 
 
 #pagebreak()
 

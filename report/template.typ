@@ -89,7 +89,7 @@
       // y == 1 is line under headers
       top: if y == 0 or y == 1 { 1pt + black } else { 0pt },
       // y == total-rows is the line at the very bottom
-      bottom: if y == total-rows { 1pt + black } else { 0pt },
+      bottom: if y == total-rows - 1 { 1pt + black } else { 0pt },
       left: 0pt,
       right: 0pt,
     ),    // Map headers and rows
