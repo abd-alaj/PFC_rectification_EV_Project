@@ -5,17 +5,19 @@ Vac_peak = Vac_rms * sqrt(2);
 f_line = 60;
 omega_line = 2*pi*f_line;
 V_batt = 400;
-I_L = 60*sqrt(2);
+I_batt = 36; 
+
+% redefined R as just 11.1 ohms instead of a calculated value. 
+R = V_batt / I_batt; 
+P_avg = V_batt * I_batt; 
+I_L = (P_avg / Vac_rms) * sqrt(2); 
+
 D = 1 - Vac_peak/V_batt;
 D_prime = 1 - D;
-P_avg = Vac_rms * 60;
-I_DC = P_avg / V_batt;
-R = V_batt / I_DC;
 L = 500e-6;
 C = 30e-3;
 fs = 100e3;
 
-% transfer function
 s = tf('s');
 den_coeff = [L*C, L/R, D_prime^2];
 num_i_coeff = [V_batt*C, V_batt/R + D_prime*I_L];
@@ -29,8 +31,6 @@ zeta = 1 / (2*R*C*omega_n);
 fn = omega_n / (2*pi);
 z_voltage_rhp = num_v_coeff(2)/(-num_v_coeff(1));
 
-
-%inner current loop
 fc_i = fs / 20;
 omega_c_i = 2*pi*fc_i;
 PM_i_target = 60;
@@ -70,12 +70,14 @@ L_v_ol = C_v * G_v_avg;
 [Gm_v, Pm_v, ~, wc_v_actual] = margin(L_v_ol);
 T_v_cl = feedback(L_v_ol, 1);
 
-% gain values of PID
 fprintf('Inner loop PID:')
 fprintf('Kp_i = %.8f, Ki_i = %.8f\n', Kp_i, Ki_i);
 fprintf('Outer loop PID')
 fprintf('Kp_v = %.8f, Ki_v = %.8f\n', Kp_v, Ki_v);
 
+L_v_nested = C_v * G_v_avg * T_i_cl;
+[~, Pm_nested] = margin(L_v_nested);
+fprintf('\nNested PM: %.2f degrees\n', Pm_nested);
 
 % visualizations
 w_vec = logspace(0, 7, 500);
