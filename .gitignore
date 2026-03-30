@@ -2,3 +2,5 @@
 # remove author names
 authors.typ
 *.pdf
+*.asv
+octave-workspace

@@ -7,7 +7,11 @@ omega_line = 2*pi*f_line;
 V_batt = 400;
 I_batt = 36; 
 
-% redefined R as just 11.1 ohms instead of a calculated value. 
+if ~exist('figures', 'dir')
+    mkdir('figures');
+end
+
+% redefined R as power accross the operating point 
 R = V_batt / I_batt; 
 P_avg = V_batt * I_batt; 
 I_L = (P_avg / Vac_rms) * sqrt(2); 
@@ -25,6 +29,17 @@ num_v_coeff = [-L*I_L, D_prime*V_batt];
 
 G_i_exact = tf(num_i_coeff, den_coeff);
 G_v_exact = tf(num_v_coeff, den_coeff);
+
+figure(1);
+margin(G_i_exact);
+xlim([10^(-1), 10^4]);
+saveas(gcf, "./figures/G_i_plant_margins.png");
+
+
+figure(2);
+margin(G_v_exact);
+xlim([10^(-1), 10^4]);
+saveas(gcf, "./figures/G_v_plant_margins.png");
 
 omega_n = D_prime / sqrt(L*C);
 zeta = 1 / (2*R*C*omega_n);
@@ -79,37 +94,12 @@ L_v_nested = C_v * G_v_avg * T_i_cl;
 [~, Pm_nested] = margin(L_v_nested);
 fprintf('\nNested PM: %.2f degrees\n', Pm_nested);
 
-% visualizations
-w_vec = logspace(0, 7, 500);
-
-subplot(2,1,1);
-bode(G_i_exact, tf(V_batt, [L, 0]), w_vec); 
-title('G_i: Exact vs Simplified');
-legend('Exact', 'Simplified');
-grid on;
-
-subplot(2,1,2);
-bode(G_v_exact, w_vec);
-title('G_v Exact (RHP Zero Analysis)');
-grid on;
-
-figure(2);
-subplot(2,1,1);
-margin(L_i_ol);
-grid on;
-subplot(2,1,2);
-step(T_i_cl);
-title('Inner Loop Step Response');
-grid on;
-
 figure(3);
-margin(L_v_ol);
+step(feedback(L_v_nested, 1), 0.5);
+title('Controller Step Response');
+xlim([0, 0.5]);
 grid on;
-
-figure(4);
-step(T_v_cl);
-title('Outer Loop Step Response');
-grid on;
+saveas(gcf, "./figures/Step_resp.png");
 
 % Nested Verification
 L_v_nested = C_v * G_v_avg * T_i_cl;

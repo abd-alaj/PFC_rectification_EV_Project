@@ -286,7 +286,7 @@ which results in the following transfer function:
 
 $
   frac(tilde(i)_L (s), tilde(d)(s)) = frac(V_"batt" (s C + frac(1, R)) + (1-D) I_L, s L (s C + frac(1, R)) + (1-D)^2)
-$
+$ <tf_ibatt>
 
 For the battery voltage transfer function, we substitute $tilde(i)_L (s)$ back into the original expression:
 
@@ -298,10 +298,42 @@ $
 The resulting control-to-output voltage transfer function is:
 
 $ 
-  frac(tilde(v)_"batt"(s), tilde(d)(s)) = frac((1-D) V_"batt" - s L I_L, s L (s C + frac(1, R)) + (1-D)^2)
-$
+  frac(tilde(v)_"batt" (s), tilde(d)(s)) = frac((1-D) V_"batt" - s L I_L, s L (s C + frac(1, R)) + (1-D)^2)
+$ <tf_vbatt>
 
 // TODO write simulations for when these transfer functions would and would not work.
+
+
+= Simulations
+
+To create a PI controller, classical control system steps were used to determine the gain values $K_p$ and $K_i$. In small signal modelling, we treat the battery as an equivalent resistance at its operating point, using Ohm's law: 
+
+$ R = V_"batt" / I_"batt" = frac( 400 "V", 36 "A" ) = 11.1 Omega $
+
+Using the transfer functions determined in @tf_ibatt, we can inspect the characteristic equation and extract our damping ratio, $zeta$, and our cutoff frequency $omega_n$. The characteristic equation $Delta(s)$ of the current transfer function is: 
+
+$ 
+  Delta(s)_(i_L) =  s L (s C + frac(1, R)) + (1-D)^2 \
+  ==> Delta(s)_(i_L) = s^2 + frac(1, R C)s + frac((1 - D)^2, L C)
+$
+
+using $Delta(s) = s^2 + 2 zeta omega_n + omega_n^2$, we can extract the damping ratio and cutoff frequency: 
+
+$
+  omega_n = frac((1-D), sqrt(L C)) "  " zeta = frac(1 , 2 R C omega_n) 
+$
+
+plugging in parameters and extracting the margins on the bode plot, we can determine the current phase and gain margin: 
+
+#figure(
+  image( 
+    "./figures/R_load/G_i_plant_margins.png", width: 80%
+  ),
+  caption: [Plant Gain and phase margins with a modelled $R_"load"$ resistor of 11.1 $Omega$]
+)
+
+we then calculate the phase margin needed to determine compensate for the 
+
 
 
 #pagebreak()
