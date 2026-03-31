@@ -13,7 +13,7 @@ I_batt = P_avg / V_batt;
 R = V_batt / I_batt;
 L = 500e-6;
 C = 30e-3;
-fs = 100e3;
+fs = 50e3;
 
 % transfer function
 s = tf('s');
@@ -81,11 +81,6 @@ L_v_ol = C_v * G_v_avg;
 [Gm_v, Pm_v, ~, wc_v_actual] = margin(L_v_ol);
 T_v_cl = feedback(L_v_ol, 1);
 
-% gain values of PID
-fprintf('Inner loop PID:')
-fprintf('Kp_i = %.8f, Ki_i = %.8f\n', Kp_i, Ki_i);
-fprintf('Outer loop PID')
-fprintf('Kp_v = %.8f, Ki_v = %.8f\n', Kp_v, Ki_v);
 
 fprintf('Inner loop PID:')
 fprintf('Kp_i = %.8f, Ki_i = %.8f\n', Kp_i, Ki_i);

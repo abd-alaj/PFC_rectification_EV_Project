@@ -1,15 +1,16 @@
 clear; clc; close all;
 
+
+if ~exist('figures', 'dir')
+    mkdir('figures');
+end
+
 Vac_rms = 240;
 Vac_peak = Vac_rms * sqrt(2);
 f_line = 60;
 omega_line = 2*pi*f_line;
 V_batt = 400;
 I_batt = 36; 
-
-if ~exist('figures', 'dir')
-    mkdir('figures');
-end
 
 % redefined R as power accross the operating point 
 R = V_batt / I_batt; 
@@ -20,7 +21,7 @@ D = 1 - Vac_peak/V_batt;
 D_prime = 1 - D;
 L = 500e-6;
 C = 30e-3;
-fs = 100e3;
+fs = 50e3;
 
 s = tf('s');
 den_coeff = [L*C, L/R, D_prime^2];
@@ -85,9 +86,7 @@ L_v_ol = C_v * G_v_avg;
 [Gm_v, Pm_v, ~, wc_v_actual] = margin(L_v_ol);
 T_v_cl = feedback(L_v_ol, 1);
 
-fprintf('Inner loop PID:')
 fprintf('Kp_i = %.8f, Ki_i = %.8f\n', Kp_i, Ki_i);
-fprintf('Outer loop PID')
 fprintf('Kp_v = %.8f, Ki_v = %.8f\n', Kp_v, Ki_v);
 
 L_v_nested = C_v * G_v_avg * T_i_cl;
