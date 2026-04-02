@@ -27,12 +27,9 @@ voltage_ripple = 4;
 % SiC switch are in the range of 10kHz to 10 MHz with power rating of sub 1 MW
 % IGBT switches at 12 Hz - 11 kHz, wattage max rating of 10 MW
 f_sw = 50e3;
-<<<<<<< HEAD
-Ts = 1 / f_sw;
-=======
-Ts    = 1/(30*f_sw);        
-Tsc   = 1/(2*f_sw);        
->>>>>>> 32e8cc9 (removed old scripts, added a new one, fixed R_load .slx file)
+
+Ts    = 1/(30*f_sw);                
+
 
 % set your L and C values here,
 % these will be overwritten if you have

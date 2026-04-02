@@ -5,3 +5,5 @@ authors.typ
 *.asv
 octave-workspace
 slprj
+*.slx.autosave
+*.slxc
