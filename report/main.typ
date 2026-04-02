@@ -365,16 +365,31 @@ The resulting controller gains and system performance metrics are summarized bel
     inset: 10pt,
     align: horizon,
     [*Parameter*], [*Value*],
-    [$K_(p,i)$ of PI controller $C_v (s)$], [0.03401083],
-    [$K_(i,i)$ of PI controller $C_v (s)$], [616.61620379],
+    [$K_(p,i)$ of PI controller $C_v (s)$], [0.01700481],
+    [$K_(i,i)$ of PI controller $C_v (s)$], [154.080540],
     [$K_(p,v)$ of PI controller $C_i (s)$], [1.71169271],
-    [$K_(i,v)$ of PI controller $C_i (s)$], [46.43726947]
+    [$K_(i,v)$ of PI controller $C_i (s)$], [46.4372695]
   ),
   caption: [gain values for both PID controllers for a static load $R = 11.1 Omega$]
 )
 
 === Implementation in simulink
 // add topology screenshot of the controller here. 
+#figure(
+  image("./figures/controller_PI.png"),
+  caption: [Controller layout of the cascaded PI controller.]
+)
+
+The controller was referenced from the cascaded PI controller layout shown in lecture 17 PFC rectification lecture, it consists of two PI controllers, an inner loop PI controller denoted as $C_v (s)$ and an outer loop PI controller denoted as $C_i (s)$. The controller along with its inputs were discretized, with a down sampler (denoted as a zero-order hold (ZOH) block) at the output of $C_v (s)$. 
+
+The controller uses the following control law: 
++ determine the voltage error $e_v$, defined as $V_o - 400 "V"$
++ feed $e_v$ into $C_v (s)$, this PI output dictates the current draw from the grid and is denoted as $hat(I_i)^*$.
++ this is then multiplied by a normalized $|cos(omega t)|$, to form $i_1^* = hat(I_i)^* |cos(omega t)|$
++ current error is then determined as $e_i = i_1^* - i_1$, where $i_1$ is the measured current through the inductor.
++ the second PI controller is then used to correct the current error $e_i$
+
+Note that $C_i (s)$ must be much faster than $C_v (s)$.
 
 
 == Controller Design for an Equivalent RC load
@@ -388,15 +403,16 @@ A very similar design process was used to determine gain values for the PI contr
     inset: 10pt,
     align: horizon,
     [*Parameter*], [*Value*],
-    [$K_(p,i)$ of PI controller $C_v (s)$], [0.03401083],
-    [$K_(i,i)$ of PI controller $C_v (s)$], [616.61620379],
+    [$K_(p,i)$ of PI controller $C_v (s)$], [0.01700481],
+    [$K_(i,i)$ of PI controller $C_v (s)$], [154.080540],
     [$K_(p,v)$ of PI controller $C_i (s)$], [1.71169271],
-    [$K_(i,v)$ of PI controller $C_i (s)$], [46.43726947]
+    [$K_(i,v)$ of PI controller $C_i (s)$], [46.4372695]
   ),
+
   caption: [gain values for both PI controllers for a static load $R = 200  "m"Omega$ and $C = 40F$]
 )
 
-The constant values in this case have barely changed, but the signal tracking is much better compared to the first one. The signal tracks at 400V and doesn't drop to sub 250V like the previous simulation has done. 
+The constant values in this case have not changed, but the signal tracking is much better compared to the first one. The signal tracks at 400V and doesn't max out to sub 250V like the previous simulation does with a static load. 
 
 #pagebreak()
 
