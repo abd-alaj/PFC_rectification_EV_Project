@@ -112,6 +112,7 @@ $
 $
 
 where $v_1(t) = hat(V_i) |cos(omega t)| = 240 sqrt(2) |cos(120 pi t)|$ and $Delta i_L = 3"A"$. We arrange the above equation to model the relationship between $f_(s w)$ and $v_1(t)$: 
+
 $ 
   f_(s w) (v_1(t)) = frac(v_1(t), 2 L Delta i_L ) ( 1 - frac(v_1(t), V_o)) 
 $
@@ -304,7 +305,7 @@ $ <tf_vbatt>
 // TODO write simulations for when these transfer functions would and would not work.
 
 
-= Simulations
+= Controller Design
 
 To create a PI controller, classical control system steps were used to determine the gain values $K_p$ and $K_i$. In small signal modelling, we treat the battery as an equivalent resistance at its operating point, using Ohm's law: 
 
@@ -323,16 +324,7 @@ $
   omega_n = frac((1-D), sqrt(L C)) "  " zeta = frac(1 , 2 R C omega_n) 
 $
 
-plugging in parameters and extracting the margins on the bode plot, we can determine the current phase and gain margin: 
-
-#figure(
-  image( 
-    "./figures/R_load/G_i_plant_margins.png", width: 80%
-  ),
-  caption: [Plant Gain and phase margins with a modelled $R_"load"$ resistor of 11.1 $Omega$]
-)
-
-The current loop PI controller $C_i (s)$ is designed by selecting a crossover frequency $f_(c,i)$ at $1/20$ of the switching frequency $f_s$. The controller takes the form:
+plugging in parameters and extracting the margins on the bode plot, we can determine the current phase and gain margin. The current loop PI controller $C_i (s)$ is then designed by selecting a crossover frequency $f_(c,i)$ at $1/20$ of the switching frequency $f_s$. The controller takes the form:
 
 $ C_i (s) = K_(p,i) + frac(K_(i,i), s) $
 
@@ -352,11 +344,6 @@ The nested loop stability is verified by combining the voltage controller, the a
 
 $ L_(v,"nested") (s) = C_v (s) dot G_(v,"avg") (s) dot T_(i,c l) (s) $
 
-#figure(
-  image("./figures/R_load/Step_resp.png", width: 80%),
-  caption: [Step response of the combined nested control loops over a 0.5s interval.]
-)
-
 The resulting controller gains and system performance metrics are summarized below:
 
 #figure(
@@ -373,14 +360,14 @@ The resulting controller gains and system performance metrics are summarized bel
   caption: [gain values for both PID controllers for a static load $R = 11.1 Omega$]
 )
 
-=== Implementation in simulink
+== Implementation in simulink
 // add topology screenshot of the controller here. 
 #figure(
   image("./figures/controller_PI.png"),
   caption: [Controller layout of the cascaded PI controller.]
 )
 
-The controller was referenced from the cascaded PI controller layout shown in lecture 17 PFC rectification lecture, it consists of two PI controllers, an inner loop PI controller denoted as $C_v (s)$ and an outer loop PI controller denoted as $C_i (s)$. The controller along with its inputs were discretized, with a down sampler (denoted as a zero-order hold (ZOH) block) at the output of $C_v (s)$. 
+The controller was referenced from the cascaded PI controller layout shown in lecture 17 PFC rectification lecture, it consists of two PI controllers, an inner loop PI controller denoted as $C_v (s)$ and an outer loop PI controller denoted as $C_i (s)$. The controller along with its inputs were discretized, with a down sampler (denoted as a zero-order hold (ZOH) block) at the output of $C_v (s)$. Some functionality was also added, mainly, "soft-start" logic, made to mitigate large current draw from the grid, and a phase locked loop to determine the phase angle of the voltage input, which mitigates drift in the controller.
 
 The controller uses the following control law: 
 + determine the voltage error $e_v$, defined as $V_o - 400 "V"$
@@ -389,30 +376,54 @@ The controller uses the following control law:
 + current error is then determined as $e_i = i_1^* - i_1$, where $i_1$ is the measured current through the inductor.
 + the second PI controller is then used to correct the current error $e_i$
 
-Note that $C_i (s)$ must be much faster than $C_v (s)$.
+== System with an arbitrary load resistor $R_"load"$
 
+to implement a load with a current draw of 14.4 kW, a plant with an equivalent load resistor of 11.1 $Omega$ was used as shown in @r_plant. 
 
-== Controller Design for an Equivalent RC load
-
-A very similar design process was used to determine gain values for the PI controllers for the circuit with the RC load, which gave better results than the one for the static load. the Parameters found in this case where
-
-//these are not correct, change them
 #figure(
-  apa_table(
-    columns: (1fr, 1fr),
-    inset: 10pt,
-    align: horizon,
-    [*Parameter*], [*Value*],
-    [$K_(p,i)$ of PI controller $C_v (s)$], [0.01700481],
-    [$K_(i,i)$ of PI controller $C_v (s)$], [154.080540],
-    [$K_(p,v)$ of PI controller $C_i (s)$], [1.71169271],
-    [$K_(i,v)$ of PI controller $C_i (s)$], [46.4372695]
-  ),
+  image("./figures/R_load/plant_R_load.png", width: 80%),
+  caption: [Entire system layout with only a static resistive load]
+) <r_plant>
 
-  caption: [gain values for both PI controllers for a static load $R = 200  "m"Omega$ and $C = 40F$]
+The following results were found: 
+
+#figure(
+  image(
+    "./figures/R_load/V_out.png", width: 80%
+  ),
+  caption: [Output Voltage transience from $t in [0, 2] "s"$]
+) <voutr>
+
+#figure(
+  image(
+    "./figures/R_load/I_out.png", width: 80%
+  ),
+  caption: [Output Current transience from $t in [0, 2] "s"$]
+) <ioutr>
+
+#figure(
+  image(
+    "./figures/R_load/curr_draw_and_inductor.png", width: 80%
+  ),
+  caption: [Current draw from the grid as well as the inductor current as steady state. ]
 )
 
-The constant values in this case have not changed, but the signal tracking is much better compared to the first one. The signal tracks at 400V and doesn't max out to sub 250V like the previous simulation does with a static load. 
+#figure(
+  image(
+    "figures/R_load/inductor_current_annotated.png", width: 80%
+  ),
+  caption: [current draw of the inductor, with when controller is turned on annotated.]
+) <inrush>
+
+Notice how there's a second transience like output in both @voutr and @ioutr, this is from the soft start logic applied in the controller. It ensures that the controller doesn't turn on until a little after the first in-rush current phase (determined at $t = 0.1 "s"$), which mitigates integrator wind-up from the controller as well as mitigates 400A rush-in event to a more manageable 200A rushin event spaced 100 ms apart, as shown in @inrush. 
+
+Another thing to note is despite $C_v (s)$ having its output saturate at $60 sqrt(2)$, inductor current still draws all the way to 120 A, which is not a very favorable outcome. To mitigate this, a higher current rated inductor could be chosen or using a 2 by 2 matrix of inductors to mitigate the load on each one. In the industry, a more robust control schema would be utilized to mitigate current overloading, with physical changes to the circuit being made, however, this simulation is never meant to be applied in real-life, and thus such measures were not thoroughly explored. 
+
+//Place your answer for question 3.c here change the subtitle too i have no clue what were demonstrating here
+== unorthodox control events
+
+== System with modelled battery load as an $R C$ load
+
 
 #pagebreak()
 

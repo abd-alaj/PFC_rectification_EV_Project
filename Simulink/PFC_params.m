@@ -28,7 +28,7 @@ voltage_ripple = 4;
 % IGBT switches at 12 Hz - 11 kHz, wattage max rating of 10 MW
 f_sw = 50e3;
 
-Ts    = 1/(30*f_sw);                
+Ts = 1e-6;                
 
 
 % set your L and C values here,
@@ -66,4 +66,3 @@ ils = tf(ils_num, ils_den) * (1/Vac);
 
 %% Control Params
 Ts_controller = 1 / (2 * f_sw);
-
