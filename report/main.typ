@@ -303,8 +303,9 @@ $
   frac(tilde(v)_"batt" (s), tilde(d)(s)) = frac((1-D) V_"batt" - s L I_L, s L (s C + frac(1, R)) + (1-D)^2)
 $ <tf_vbatt>
 
-// TODO write simulations for when these transfer functions would and would not work and add them here along with explanations
+== Limitations of Model Linearization
 
+// TODO PLACE QUESTION 2E hHERE
 
 = Controller Design
 
@@ -417,7 +418,29 @@ Notice how there's a second transience like output in both @voutr and @ioutr, th
 Another thing to note is despite $C_v (s)$ having its output saturate at $60 sqrt(2)$, inductor current still draws all the way to 120 A, which is not a very favorable outcome. To mitigate this, a higher current rated inductor could be chosen or using a 2 by 2 matrix of inductors to mitigate the load on each one. In the industry, a more robust control schema would be utilized to mitigate current overloading, with physical changes to the circuit being made, however, this simulation is never meant to be applied in real-life, and thus such measures were not thoroughly explored. 
 
 == unorthodox control events
-//TODO Place your answer for question 3.c here change the subtitle too i have no clue what were demonstrating here
+
+In this part, the current control loop was tested by replacing the output of the outer voltage loop with a fixed current command $hat(I)^*$ and then changing this command using a step input. In the simulation, the reference was set to $-10$ initially and then stepped to $+10$ at approximately $0.6"s"$. The purpose was to determine whether the inner current loop could track both positive and negative current commands, and to interpret the physical meaning of the result.
+
+From the reference-current plot, the command clearly changed from a negative value to a positive value at the step instant. The inductor current did not follow the negative command before $0.6"s"$. Instead, it remained essentially at zero apart from the short startup transient at the beginning of the simulation. After the step changed to a positive reference, the inductor current increased and a switching ripple band appeared, indicating that the converter began operating normally and drawing current from the source. This shows that the current loop responded once a physically achievable command was applied.
+
+The input voltage and input current plots support this conclusion. The input voltage remained sinusoidal, as expected from the AC source. During the interval when $hat(I)^* < 0$, the input current was nearly zero, meaning the converter was not able to force the source current to become negative. After the step to $\hat(I)^* > 0$, the input current became a clear alternating waveform synchronized with the source voltage, which indicates that the converter resumed normal boost-PFC operation and began transferring power from the AC side to the DC side.
+
+The output-side waveforms show the same behavior. The output current remained near zero during the negative-reference interval, then rose to a positive value once the command became positive. The output voltage stayed around the DC bus level and increased slightly after the step, which is consistent with more power being delivered to the output once positive current was commanded. The large spike at the very start of the plots is a startup transient caused by initial conditions and switching initialization, and it should not be interpreted as steady-state behavior.
+
+The result for a negative value of $hat(I)^*$ is especially important. A negative current command would physically mean that power is required to flow in the reverse direction, that is, from the DC side back to the AC source. In practical terms, this would correspond to inverter or regenerative operation, where the battery or DC bus would send power back to the grid. However, the converter used here is a boost PFC rectifier, which is fundamentally a unidirectional power stage. Because of the diode and rectifier structure and the boost topology, current is intended to flow from the AC input to the DC output only. Reverse current transfer is therefore not supported by this circuit.
+
+Therefore, the system is not able to track the desired current when $hat(I)^*$ is negative. The reason is not poor controller tuning, but rather the physical limitation of the topology itself. The controller may request negative current, but the hardware cannot produce it. In practice, the loop saturates at the lower operating limit, so the inductor current and input current remain near zero instead of becoming negative. Once the reference becomes positive again, the command falls within the allowable operating region of the converter, and current tracking resumes.
+
+Overall, the simulation demonstrates that the current loop works properly only for positive current commands, which correspond to the intended mode of operation of the boost PFC converter. The simulation also confirms that a negative $hat(I)^*$ has no realizable meaning for this topology unless the converter is redesigned as a bidirectional AC-DC converter. Thus, the main conclusion from Part 3(c) is that the inner current loop can regulate current in the forward power-flow direction, but it cannot enforce reverse current because the power stage is inherently unidirectional.
+
+=== Direct Answers
+
+If a negative value of $hat(I)^*_i$ is applied as the current reference, the reference is not tracked by the converter. The input and inductor currents are observed to remain near zero, aside from transients present during the initialisation period, as reverse current flow cannot be enforced by the unidirectional topology of the boost PFC rectifier.
+
+Were the system capable of tracking a negative current reference, this would correspond physically to reverse power flow from the DC bus back to the AC source --- behaviour characteristic of inverter or regenerative operation. However, this capability is not possessed by the boost PFC rectifier, as power transfer is constrained to a single direction: from the AC source to the DC bus. The realisation of negative current tracking would necessitate the use of a bidirectional converter topology.
+
+The results obtained confirm this behaviour. No response to the negative reference is exhibited by the control loop, with the inductor current, input current, and output current all remaining near zero during the interval in which a negative reference is commanded. Upon the reference returning to a positive value, normal forward power-transfer operation is resumed, as evidenced by the inductor current, input current, and output current all returning to expected steady-state behaviour.
+
 
 == System with modelled battery as an $R C$ load
 
@@ -463,8 +486,8 @@ The same principles were used to determine the $K_p$, $K_i$ values, granted it i
   apa_table(
     columns: (auto, 1fr),
     "Parameter", "Value",
-    [$K_(p,i)$ of PI controller $C_v (s)$], [0.01700481],
-    [$K_(i,i)$ of PI controller $C_v (s)$], [154.080540],
+    [$K_(p,v)$ of PI controller $C_v (s)$], [$2.15 times 10^(-1)$],
+    [$K_(i,v)$ of PI controller $C_v (s)$], [$2.2 times 10^(-4)$],
     [$K_(p,i)$ of PI controller $C_i (s)$], [0.101010],
     [$K_(i,i)$ of PI controller $C_i (s)$], [0.054]
   ),
@@ -521,8 +544,8 @@ $
     "Parameter", "Value",
     "Fundamental Amplitude", "115.70",
     "THD", "4.08%",
-    [V#sub[rms]], "240.00 V",
-    [I#sub[rms]], "81.89 A",
+    [$V_"RMS"$], "240.00 V",
+    [$I_"RMS"$], "81.89 A",
     "Real Power", "19633.48 W",
     "Apparent Power", "19652.58 VA",
     "Power Factor", "0.9990",
