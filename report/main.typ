@@ -214,8 +214,6 @@ $
 
 To model the PFC rectifier stage accurately, it is important to derive the average model first. We use the classical boost converter topology and extract the state variables as a function of the average inductor current $chevron.l i_L chevron.r$, battery $chevron.l v_"batt" chevron.r$ and input voltage $chevron.l v_1 chevron.r$. We use CCB and VSB laws and get the following: 
 
-//it may be a good idea to type up the derviation of the boost converter 0 to T_sw
-
 $
   C frac(d, d t) chevron.l V_"batt" chevron.r = (1 - d) chevron.l i_L chevron.r - 1 / R chevron.l V_"batt" chevron.r \
 
@@ -349,15 +347,14 @@ $ L_(v,"nested") (s) = C_v (s) dot G_(v,"avg") (s) dot T_(i,c l) (s) $
 
 The resulting controller gains and system performance metrics are summarized below:
 
-//TODO: update K_p and K_i values for R load
 #figure(
   apa_table(
     columns: (auto, 1fr),
     "Parameter", "Value",
-    [$K_(p,i)$ of PI controller $C_v (s)$], [0.01700481],
-    [$K_(i,i)$ of PI controller $C_v (s)$], [154.080540],
-    [$K_(p,v)$ of PI controller $C_i (s)$], [1.71169271],
-    [$K_(i,v)$ of PI controller $C_i (s)$], [46.4372695]
+    [$K_(p,v)$ of PI controller $C_v (s)$], [1.7],
+    [$K_(i,v)$ of PI controller $C_v (s)$], [4.24],
+    [$K_(p,i)$ of PI controller $C_i (s)$], [0.101010],
+    [$K_(i,i)$ of PI controller $C_i (s)$], [0.054]
   ),
   caption: [gain values for both PID controllers for a static load $R = 11.1 Omega$]
 )
@@ -415,7 +412,7 @@ Simulations of the output voltage, voltage ripple, inductor current, and current
   caption: [current draw of the inductor, with when controller is turned on annotated.]
 ) <inrush>
 
-Notice how there's a second transience like output in both @voutr and @ioutr, this is from the soft start logic applied in the controller. It ensures that the controller doesn't turn on until a little after the first in-rush current phase (determined at $t = 0.1 "s"$), which mitigates integrator wind-up from the controller as well as mitigates 400A rush-in event to a more manageable 200A rushin event spaced 100 ms apart, as shown in @inrush. 
+Notice how there's a second transience like output in both @voutr and @ioutr, this is from the soft start logic applied in the controller. It ensures that the controller doesn't turn on until a little after the first in-rush current phase (determined at $t = 0.1 "s"$), which mitigates integrator wind-up from the controller as well as mitigates 400A rush-in event to a more manageable double 200A rush-in event spaced 100 ms apart, as shown in @inrush. 
 
 Another thing to note is despite $C_v (s)$ having its output saturate at $60 sqrt(2)$, inductor current still draws all the way to 120 A, which is not a very favorable outcome. To mitigate this, a higher current rated inductor could be chosen or using a 2 by 2 matrix of inductors to mitigate the load on each one. In the industry, a more robust control schema would be utilized to mitigate current overloading, with physical changes to the circuit being made, however, this simulation is never meant to be applied in real-life, and thus such measures were not thoroughly explored. 
 
@@ -462,23 +459,19 @@ $
 
 The same principles were used to determine the $K_p$, $K_i$ values, granted it is much more involved and was a pain to figure out. Ball park gains were determined then it was an iterative process to make a functioning controller. 
 
-//TODO: update K_p and K_i values for R load
 #figure(
   apa_table(
     columns: (auto, 1fr),
     "Parameter", "Value",
     [$K_(p,i)$ of PI controller $C_v (s)$], [0.01700481],
     [$K_(i,i)$ of PI controller $C_v (s)$], [154.080540],
-    [$K_(p,v)$ of PI controller $C_i (s)$], [1.71169271],
-    [$K_(i,v)$ of PI controller $C_i (s)$], [46.4372695]
+    [$K_(p,i)$ of PI controller $C_i (s)$], [0.101010],
+    [$K_(i,i)$ of PI controller $C_i (s)$], [0.054]
   ),
   caption: [gain values for both PID controllers for an equivalent battery $R = 200 "mF, " C = 40 "F"$]
 )
 
 === simulations
-
-In this report, due to my PC being absolute ass, I needed to reduce the capacitance to observe steady state without crashing my laptop. Theoretically, most $R C$ first-order circuit loads converge to steady state behavior at $5 tau$, @nilsson2018electric where $tau$ is the time constant defined as $tau = R C$. Thus, to make my life easier, I make the capacitor value smaller so my PC doesn't crash. In this case, We can determine steady state behavior at $5 tau = (5)(4 "F")(0.2 Omega) = 4 "s"$, instead of running the entire simulation for 40 seconds, having my laptop crash 20 seconds in, and having a massive, hairline ruining cortisol spike. 
-
 
 #figure(
   image(
@@ -502,14 +495,40 @@ Doing the same thing for @ioutrc, $Delta i_(p p) =  0.04 V$. It's important that
 
 == Grid-Zero crossing behavior
 
-// TODO add explanation + graphs for what happens at the grid zero-crossing, explain the phenomena, what is going on in the graphs at that point. 
+In CCM PFC, when the instantaneous AC line voltage approaches zero, the inductor current drops below the threshold needed to maintain continuous conduction, causing the converter to fall into discontinuous conduction mode (DCM) near the zero crossing. This means the current reference cannot be tracked accurately during this brief window, introducing distortion into the input current waveform.@McDonald2020PFC
 
 = Power Factor and Total Harmonic Distortion
 
+To calculate total harmonic distortion (THD) and power factor (PF), the following fomulae were used@erickson2020fundamentals. They were mainly implemented as scripts in matlab, to process data from `.mat` files. 
+
+$
+"THD" &= (sqrt(sum_(n=2)^(N) I_n^2)) / I_1 times 100% \
+"PF"  &= P / S = P / (V_"rms" I_"rms")
+$
+
 == Static $R$-load
 
-// TODO calculate R-load THD and PF, a table with a brief explanation is sufficient
+#figure(
+  image(
+    "./figures/R_load/thd_harmonics.png", width: 80%
+  ),
+  caption: [Input current harmonics contributing to total harmonic distortion]
+)
 
+#figure(
+  apa_table(
+    columns: (auto, 1fr),
+    "Parameter", "Value",
+    "Fundamental Amplitude", "115.70",
+    "THD", "4.08%",
+    [V#sub[rms]], "240.00 V",
+    [I#sub[rms]], "81.89 A",
+    "Real Power", "19633.48 W",
+    "Apparent Power", "19652.58 VA",
+    "Power Factor", "0.9990",
+  ),
+  caption: [THD and Power Factor Analysis Results for PFC with a static $R_"load"$]
+)
 == Complex $R C$-load
 
 // TODO calculate RC-load THD and PF, explain THD distortion and maybe steps to mitigate it (optional)
