@@ -3,6 +3,8 @@
 // Check for the private compile flag
 #let use-private = sys.inputs.at("private", default: "false") == "true"
 
+#show cite: it => super(it)
+
 // Conditionally load the array of authors
 #let document-authors = if use-private {
   import "authors.typ": private-authors
@@ -30,7 +32,7 @@
   authors: document-authors,
   date: auto,
   abstract:[
-
+    I'm not writing an abstract. read the report. no one reads this part anyways.
   ],
 )
 
@@ -38,7 +40,7 @@
 The design of an electric vehicle (EV) charging system requires a multistage power conversion architecture to convert alternating current (AC) from the utility grid with a high voltage DC battery pack. Let grid voltage $v_(a c)$ be a 240 volt RMS sinusoidal wave that must be converted to a 400-volt DC output, suitable to charge an EV battery. The abstracted architecture of the system, illustrated in @fig-ev-arch, defines the primary functional blocks and their respective roles in the conversion process.
 
 #figure( 
-  image("./figures/arch-rectifier.svg", width: 80%),
+  image("./figures/arch-rectifier.png", width: 80%),
   caption: [High level architectural overview of the rectifier and PFC circuit.] 
 ) <fig-ev-arch>
 
@@ -48,7 +50,7 @@ In @fig-ev-arch, the DC-AC, transformer, and AC-DC stages are idealized as a 1:1
 The front end of the system utilizes an uncontrolled full-bridge rectifier to convert the AC mains voltage to a pulsating DC bus. This is immediately followed by a boost converter to regulate the voltage step-up, as shown in @fig-rectifier-boost.
 
 #figure(
-  image("./figures/onboard_charging_circuit_model.svg", width: 80%),
+  image("./figures/onboard_charging_circuit_model.png", width: 80%),
   caption: [Full-Bridge Rectifier and Boost Converter Topology]
 ) <fig-rectifier-boost>
 
@@ -59,15 +61,16 @@ The front end of the system utilizes an uncontrolled full-bridge rectifier to co
 #figure(
   apa_table(
     columns: (auto, 1fr),
-    headers: ("Parameters", "Value"),
+    "Parameters", "Value",
     [Grid Voltage], [ 240V RMS $:= 240 sqrt(2) cos(2 pi 60 t)$],
     [Current Draw], [60A RMS $:= 60 sqrt(2) cos(2 pi 60 t)$],
     [Power Factor ], [1],
     [Battery Load], [$C_("batt") = 40 F, " " R_("ESR") = 200 m Omega$],
-    [Max $Delta i_L$], [3A]
+    [Max $Delta i_L$], [3A],
   ),
   caption: [Table of Parameters provided by the instructor of the PFC rectifier project]
 ) 
+
 
 There were multiple assumptions made in the creation of the ideal model of both the rectification and boost stage.
 
@@ -287,7 +290,7 @@ which results in the following transfer function:
 
 $
   frac(tilde(i)_L (s), tilde(d)(s)) = frac(V_"batt" (s C + frac(1, R)) + (1-D) I_L, s L (s C + frac(1, R)) + (1-D)^2)
-$ <tf_ibatt>
+$ <tf_il>
 
 For the battery voltage transfer function, we substitute $tilde(i)_L (s)$ back into the original expression:
 
@@ -302,7 +305,7 @@ $
   frac(tilde(v)_"batt" (s), tilde(d)(s)) = frac((1-D) V_"batt" - s L I_L, s L (s C + frac(1, R)) + (1-D)^2)
 $ <tf_vbatt>
 
-// TODO write simulations for when these transfer functions would and would not work.
+// TODO write simulations for when these transfer functions would and would not work and add them here along with explanations
 
 
 = Controller Design
@@ -311,7 +314,7 @@ To create a PI controller, classical control system steps were used to determine
 
 $ R = V_"batt" / I_"batt" = frac( 400 "V", 36 "A" ) = 11.1 Omega $
 
-Using the transfer functions determined in @tf_ibatt, we can inspect the characteristic equation and extract our damping ratio, $zeta$, and our cutoff frequency $omega_n$. The characteristic equation $Delta(s)$ of the current transfer function is: 
+Using the transfer functions determined in @tf_il, we can inspect the characteristic equation and extract our damping ratio, $zeta$, and our cutoff frequency $omega_n$. The characteristic equation $Delta(s)$ of the current transfer function is: 
 
 $ 
   Delta(s)_(i_L) =  s L (s C + frac(1, R)) + (1-D)^2 \
@@ -346,12 +349,11 @@ $ L_(v,"nested") (s) = C_v (s) dot G_(v,"avg") (s) dot T_(i,c l) (s) $
 
 The resulting controller gains and system performance metrics are summarized below:
 
+//TODO: update K_p and K_i values for R load
 #figure(
   apa_table(
-    columns: (1fr, 1fr),
-    inset: 10pt,
-    align: horizon,
-    [*Parameter*], [*Value*],
+    columns: (auto, 1fr),
+    "Parameter", "Value",
     [$K_(p,i)$ of PI controller $C_v (s)$], [0.01700481],
     [$K_(i,i)$ of PI controller $C_v (s)$], [154.080540],
     [$K_(p,v)$ of PI controller $C_i (s)$], [1.71169271],
@@ -361,15 +363,14 @@ The resulting controller gains and system performance metrics are summarized bel
 )
 
 == Implementation in simulink
-// add topology screenshot of the controller here. 
 #figure(
   image("./figures/controller_PI.png"),
   caption: [Controller layout of the cascaded PI controller.]
 )
 
-The controller was referenced from the cascaded PI controller layout shown in lecture 17 PFC rectification lecture, it consists of two PI controllers, an inner loop PI controller denoted as $C_v (s)$ and an outer loop PI controller denoted as $C_i (s)$. The controller along with its inputs were discretized, with a down sampler (denoted as a zero-order hold (ZOH) block) at the output of $C_v (s)$. Some functionality was also added, mainly, "soft-start" logic, made to mitigate large current draw from the grid, and a phase locked loop to determine the phase angle of the voltage input, which mitigates drift in the controller.
+This control law consists of two PI controllers, an inner loop PI controller denoted as $C_v (s)$ and an outer loop PI controller denoted as $C_i (s)$. The controller along with its inputs were discretized, with a down sampler (denoted as a zero-order hold (ZOH) block) at the output of $C_v (s)$. Some functionality was also added, mainly, "soft-start" logic, made to mitigate large current draw from the grid, and a phase locked loop to determine the phase angle of the voltage input, which mitigates drift in the controller.
 
-The controller uses the following control law: 
+The controller uses the following control law@erickson2020fundamentals @reza2026pfc: 
 + determine the voltage error $e_v$, defined as $V_o - 400 "V"$
 + feed $e_v$ into $C_v (s)$, this PI output dictates the current draw from the grid and is denoted as $hat(I_i)^*$.
 + this is then multiplied by a normalized $|cos(omega t)|$, to form $i_1^* = hat(I_i)^* |cos(omega t)|$
@@ -381,36 +382,35 @@ The controller uses the following control law:
 to implement a load with a current draw of 14.4 kW, a plant with an equivalent load resistor of 11.1 $Omega$ was used as shown in @r_plant. 
 
 #figure(
-  image("./figures/R_load/plant_R_load.png", width: 80%),
+  image("./figures/plant_R_load.png"),
   caption: [Entire system layout with only a static resistive load]
 ) <r_plant>
 
-The following results were found: 
-
+Simulations of the output voltage, voltage ripple, inductor current, and current draw were made and data was gathered. the following plots were then acquired. 
 #figure(
   image(
-    "./figures/R_load/V_out.png", width: 80%
+    "./figures/R_load/V_out.png",
   ),
   caption: [Output Voltage transience from $t in [0, 2] "s"$]
 ) <voutr>
 
 #figure(
   image(
-    "./figures/R_load/I_out.png", width: 80%
+    "./figures/R_load/I_out.png",
   ),
   caption: [Output Current transience from $t in [0, 2] "s"$]
 ) <ioutr>
 
 #figure(
   image(
-    "./figures/R_load/curr_draw_and_inductor.png", width: 80%
+    "./figures/R_load/curr_draw_and_inductor.png"
   ),
   caption: [Current draw from the grid as well as the inductor current as steady state. ]
 )
 
 #figure(
   image(
-    "figures/R_load/inductor_current_annotated.png", width: 80%
+    "figures/R_load/inductor_current_annotated.png"
   ),
   caption: [current draw of the inductor, with when controller is turned on annotated.]
 ) <inrush>
@@ -419,11 +419,104 @@ Notice how there's a second transience like output in both @voutr and @ioutr, th
 
 Another thing to note is despite $C_v (s)$ having its output saturate at $60 sqrt(2)$, inductor current still draws all the way to 120 A, which is not a very favorable outcome. To mitigate this, a higher current rated inductor could be chosen or using a 2 by 2 matrix of inductors to mitigate the load on each one. In the industry, a more robust control schema would be utilized to mitigate current overloading, with physical changes to the circuit being made, however, this simulation is never meant to be applied in real-life, and thus such measures were not thoroughly explored. 
 
-//Place your answer for question 3.c here change the subtitle too i have no clue what were demonstrating here
 == unorthodox control events
+//TODO Place your answer for question 3.c here change the subtitle too i have no clue what were demonstrating here
 
-== System with modelled battery load as an $R C$ load
+== System with modelled battery as an $R C$ load
 
+In this scenario, instead of an arbitrary resistor $R_"load"$ being placed at the output of the boost converter, an equivalent $R C$ model was added. 
+
+#figure(
+  image("./figures/Plant_RC.png"),
+  caption: [system model with equivalent battery model.]
+)
+
+In this case, The entire controller needs to be redetermined, we need to re-analyze the plant in @tf_il and @tf_vbatt, we can rewrite these in terms of equivalent admittance. in the static $R_"load"$ the equivalent admittance $Y(s) = (s C + 1/R)$, we can rewrite the the aforementioned equations in terms of the admittance. 
+
+$
+  frac(tilde(i)_L (s), tilde(d)(s)) = frac(V_"batt" Y(s) + (1-D) I_L, s L Y(s) + (1-D)^2) \
+  frac(tilde(v)_"batt" (s), tilde(d)(s)) = frac((1-D) V_"batt" - s L I_L, s L Y(s) + (1-D)^2)
+$ <tf_gen>
+
+to determine the new admittance we will calculate the impedance of the output of the new system with the $R C$ equvalent load: 
+
+#let Yrc = $frac(s C_2 R_"ESR" + 1, s^2 C_1 C_2 + s C_2)$
+
+$
+  Z(s) = frac(1, s C_1) || (R_"ESR" + frac(1, s C_2)) \
+  ==> frac( s^2 C_1 C_2 + s C_2, s C_2 R_"ESR" + 1)
+$
+
+where $C_1$ and $C_2$ are the filtering capacitor, and battery capacitance, respectively. to Determine $Y(s)$, we take the inverse of the impedance: 
+
+$
+  Y_(R C) (s) = Yrc
+$
+
+determining our new transfer functions: 
+
+$
+  frac(tilde(i)_L (s), tilde(d)(s)) = frac(V_"batt" ( Yrc ) + (1-D) I_L, s L ( Yrc ) + (1-D)^2) \
+  frac(tilde(v)_"batt" (s), tilde(d)(s)) = frac((1-D) V_"batt" - s L I_L, s L ( Yrc ) + (1-D)^2)
+$ 
+
+The same principles were used to determine the $K_p$, $K_i$ values, granted it is much more involved and was a pain to figure out. Ball park gains were determined then it was an iterative process to make a functioning controller. 
+
+//TODO: update K_p and K_i values for R load
+#figure(
+  apa_table(
+    columns: (auto, 1fr),
+    "Parameter", "Value",
+    [$K_(p,i)$ of PI controller $C_v (s)$], [0.01700481],
+    [$K_(i,i)$ of PI controller $C_v (s)$], [154.080540],
+    [$K_(p,v)$ of PI controller $C_i (s)$], [1.71169271],
+    [$K_(i,v)$ of PI controller $C_i (s)$], [46.4372695]
+  ),
+  caption: [gain values for both PID controllers for an equivalent battery $R = 200 "mF, " C = 40 "F"$]
+)
+
+=== simulations
+
+In this report, due to my PC being absolute ass, I needed to reduce the capacitance to observe steady state without crashing my laptop. Theoretically, most $R C$ first-order circuit loads converge to steady state behavior at $5 tau$, @nilsson2018electric where $tau$ is the time constant defined as $tau = R C$. Thus, to make my life easier, I make the capacitor value smaller so my PC doesn't crash. In this case, We can determine steady state behavior at $5 tau = (5)(4 "F")(0.2 Omega) = 4 "s"$, instead of running the entire simulation for 40 seconds, having my laptop crash 20 seconds in, and having a massive, hairline ruining cortisol spike. 
+
+
+#figure(
+  image(
+    "./figures/RC_load/V_out_RC.png", 
+  ),
+  caption: [Output Voltage transience from $t in [0, 10] "s"$ (top), along with steady state voltage ripple (bottom)]
+) <voutrc>
+
+Inspecting @voutrc, the voltage ripple is approximately $Delta V_(p p) =  0.04 V$. 
+
+#figure(
+  image(
+    "./figures/RC_load/I_out_RC.png",
+  ),
+  caption: [Output Current transience from $t in [0, 10] "s"$ (top), along with steady state current ripple (bottom)]
+) <ioutrc>
+
+Doing the same thing for @ioutrc, $Delta i_(p p) =  0.04 V$. It's important that these ripple values are only during steady state, i.e. when the capacitor is practically fully charged, mainly due to transient results being a poor indication of ripple behavior. 
+
+// TODO add more explanation here. Mainly on on the over current during transience. also explain why limiting overcurrent will also kill my PC. 
+
+== Grid-Zero crossing behavior
+
+// TODO add explanation + graphs for what happens at the grid zero-crossing, explain the phenomena, what is going on in the graphs at that point. 
+
+= Power Factor and Total Harmonic Distortion
+
+== Static $R$-load
+
+// TODO calculate R-load THD and PF, a table with a brief explanation is sufficient
+
+== Complex $R C$-load
+
+// TODO calculate RC-load THD and PF, explain THD distortion and maybe steps to mitigate it (optional)
+
+= Conclusion
+
+// TODO write a conclusion
 
 #pagebreak()
 
