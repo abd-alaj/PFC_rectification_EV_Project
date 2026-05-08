@@ -32,6 +32,7 @@ The design achieved:
 ### Plant and Load Models
 * **Resistive Load Model:** ![Resistive Load](./assets/figures/plant_R_load.png)
 * **RC Battery Model:** ![RC Load](./assets/figures/Plant_RC.png)
+* **Control Topology** ![Controller](./assets/figures/controller_PI.png)
 
 ### Performance Analysis
 * **Resistor Load (Single R):**
@@ -40,7 +41,8 @@ The design achieved:
 * **RC Load Modeling:**
     ![Output Voltage RC](./assets/figures/RC_load/V_out_RC.png)
     ![Inductor Current RC](./assets/figures/RC_load/inductor_current_RC.png)
-* **Current and Grid Analysis:**
+* **Inductor Current and Grid Analysis:**
     ![Current Draw](./assets/figures/R_load/inductor_current_annotated.png)
+    ![Grid Draw](./assets/figures/R_load/curr_draw_and_inductor.png)
 * **Harmonic Analysis:**
     ![THD Harmonics](./assets/figures/R_load/thd_harmonics.png)
