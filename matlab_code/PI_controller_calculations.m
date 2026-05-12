@@ -2,36 +2,15 @@ clear; clc;
 
 
 % DISCLAIMER
-% I tried everything to make this code give me a stable voltage controller
-% and couldn't for the life of me make one...
-% I gave up and just used the matlab PID tune function because it does some
-% voodoo black magic shit that at the time of writing i don't understand.
-% There's something in control systems or the other courses that may or may
-% not have taught me that solves this issue, but i employed the strategies
-% i knew and it didn't fucking work. I tried fucking EVERYTHING. HELL I
-% EVEN TRIED TO FUCKING USE A POLE ZERO MODEL INSTEAD OF A PI, A STATE
-% SPACE MODEL, EVERYTHING. EVEN DISCRETIZATION OF THE PLANT AND WORKING
-% COMPLETELY IN THE DISCRETE DOMAIN BY HAND. NOTHING WORKED.
 
-% I'm probably making the same mistake over and over again and this script
-% is part of this endeavor. 
-
-% I have too much shame to just delete this script. I spent 8+ hours making
-% this script and debugging without ANY HELP OF AI because because
-% approaching it before hand they would just state to put a pole at negative
-% infinity or tell my script or hand calculations were wrong and then do
-% the EXACT SAME FUCKING THING I DID but in a more convoluted manner.
-% TSPMO
-% either way, AI sucks for creation of a PI controller. 
-% I am so mad at myself for spending so many tokens begging AI to find a 
-% solution before I gave up and just went through the controls
-% textbook. 
-
-% TLDR: this script doesn't work. don't use it. It brings shame to my
-% professor, my faculty, my supervisor, and my university. yet I cannot go
-% out back and put it down like Old Yelller, I made it. It's mine, and it's
-% failure is a result of it being mine. But I don't care. It stays on
-% github. It stays on my PC, because atleast its my fucking work. 
+%{
+The current script does not work.
+The plant was tuned via the PIDTune function MATLAB provides. 
+Although I wanted this script to work, Deadlines were approaching and 
+the current analytical analysis model was not providing stable gain values.
+We opted to use the program's features because it provided a more robust controller
+and real time analysis of the controller's step response, which allows for more intuitive tuning.
+%}
 
 % Parameters
 Vac_rms = 240;
